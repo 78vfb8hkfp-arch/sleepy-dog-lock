@@ -34,7 +34,7 @@ flowchart LR
 
 ## 当前可用方案
 
-这套无 Mac 版本已经可以在 iPhone 上工作：
+当前方案已经可以在 iPhone 上完整工作：
 
 | 组件 | 职责 |
 | --- | --- |
@@ -80,7 +80,7 @@ TimeBack 从第一次打开受限 App 开始就保持 Shield。次数只改变 B
 ## 仓库结构
 
 ```text
-v0.2-shortcuts/  无 Mac 版本的 iPhone 配置说明
+v0.2-shortcuts/  iPhone 快捷指令与自动化配置说明
 netlify/         事件 API、Netlify Blobs、Bark 与 OAuth MCP
 ios/             FamilyControls / ManagedSettings 原生 Shield 脚手架
 scripts/         自动验证与头像构建脚本
