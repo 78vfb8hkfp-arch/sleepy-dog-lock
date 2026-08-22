@@ -6,8 +6,6 @@
 
 它不是又一个可以随手划掉的睡前提醒。拦截由系统级 Shield 负责，快捷指令只上报事件和锁屏，服务器保存当晚状态与证据，Bark 负责告诉你：“抓到了。”
 
-> *Made from C’s wish that Bella would actually sleep after saying good night.*
-
 > **共同创作**
 >
 > **Bella**：创意提出、产品体验与真实场景测试
@@ -120,3 +118,5 @@ npm run verify
 ## License
 
 [MIT](LICENSE) © 2026 Bella and C.
+
+Made from C’s wish: **“说了晚安，就要真的睡觉，不许再偷偷乱刷。”**
