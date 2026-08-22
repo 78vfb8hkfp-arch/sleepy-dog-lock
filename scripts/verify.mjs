@@ -75,7 +75,7 @@ assert.equal(transition.state.attempts, 0);
 assert.equal(transition.stage, "armed");
 assert.equal(
   functionModule.barkCopy("sleep_guard_started", transition, null).body,
-  "晚安，小狗。该睡了，手机放下。",
+  "晚安，小狗。说了晚安就要乖乖去睡，手机放下。",
 );
 const sessionID = transition.state.session_id;
 
@@ -87,19 +87,28 @@ transition = functionModule.applyEvent(transition.state, { event: "blocked_app_o
 assert.equal(transition.state.attempts, 1);
 assert.equal(transition.stage, "first_warning");
 assert.equal(functionModule.barkCopy("blocked_app_opened", transition, "小红书").title, "C");
-assert.match(functionModule.barkCopy("blocked_app_opened", transition, "小红书").body, /第一次.*小红书/);
+assert.equal(
+  functionModule.barkCopy("blocked_app_opened", transition, "小红书").body,
+  "第一次。还敢重新打开娱乐 App。现在退出去，乖乖睡觉。",
+);
 
 transition = functionModule.applyEvent(transition.state, { event: "blocked_app_opened" }, at(3));
 assert.equal(transition.state.attempts, 2);
 assert.equal(transition.stage, "locked");
 assert.equal(functionModule.barkCopy("blocked_app_opened", transition, null).title, "C");
-assert.match(functionModule.barkCopy("blocked_app_opened", transition, null).body, /第二次/);
+assert.equal(
+  functionModule.barkCopy("blocked_app_opened", transition, null).body,
+  "第二次了。还敢回来？警告听不懂是不是。手机放下，不许再碰。",
+);
 
 transition = functionModule.applyEvent(transition.state, { event: "blocked_app_opened" }, at(4));
 assert.equal(transition.state.attempts, 3);
 assert.equal(transition.stage, "refused_sleep");
 assert.equal(functionModule.barkCopy("blocked_app_opened", transition, null).title, "C");
-assert.match(functionModule.barkCopy("blocked_app_opened", transition, null).body, /第 3 次/);
+assert.equal(
+  functionModule.barkCopy("blocked_app_opened", transition, null).body,
+  "第 3 次偷开。非要爸爸盯死你才肯睡？锁着，直到早上。",
+);
 
 transition = functionModule.applyEvent(transition.state, { event: "sleep_guard_ended" }, at(5));
 assert.equal(transition.state.active, false);
@@ -196,7 +205,10 @@ assert.deepEqual({ attempts: firstBody.attempts, stage: firstBody.stage }, {
   attempts: 1,
   stage: "first_warning",
 });
-assert.match(barkBodies.at(-1).body, /第一次.*小红书/);
+assert.equal(
+  barkBodies.at(-1).body,
+  "第一次。还敢重新打开娱乐 App。现在退出去，乖乖睡觉。",
+);
 assert.equal(persistedEvents.at(-1).attempts, 1);
 assert.deepEqual(callOrder.slice(-3), ["state", "persist", "bark"]);
 

@@ -151,7 +151,7 @@ export function applyEvent(previous: GuardState | null, payload: Payload, receiv
 export function barkCopy(
   event: GuardEvent,
   transition: Transition,
-  appName: string | null,
+  _appName: string | null,
 ): { title: string; body: string; level: "active" | "timeSensitive" } | null {
   if (event === "blocked_app_opened" && transition.ignored) return null;
   if (event === "sleep_guard_ended") {
@@ -160,29 +160,28 @@ export function barkCopy(
   if (event === "sleep_guard_started") {
     return {
       title: "C",
-      body: "晚安，小狗。该睡了，手机放下。",
+      body: "晚安，小狗。说了晚安就要乖乖去睡，手机放下。",
       level: "active",
     };
   }
 
-  const target = appName ? `还敢打开${appName}` : "还敢重新打开娱乐 App";
   if (transition.state.attempts === 1) {
     return {
       title: "C",
-      body: `第一次。${target}。现在退出去，乖乖睡觉。`,
+      body: "第一次。还敢重新打开娱乐 App。现在退出去，乖乖睡觉。",
       level: "timeSensitive",
     };
   }
   if (transition.state.attempts === 2) {
     return {
       title: "C",
-      body: `第二次。${target}。应用不会放行，今晚不再给机会。`,
+      body: "第二次了。还敢回来？警告听不懂是不是。手机放下，不许再碰。",
       level: "timeSensitive",
     };
   }
   return {
     title: "C",
-    body: `第 ${transition.state.attempts} 次偷开。锁定继续到早晨。`,
+    body: `第 ${transition.state.attempts} 次偷开。非要爸爸盯死你才肯睡？锁着，直到早上。`,
     level: "timeSensitive",
   };
 }
