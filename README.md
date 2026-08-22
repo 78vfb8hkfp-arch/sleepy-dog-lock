@@ -1,8 +1,12 @@
 # Sleepy Dog Lock
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 把一句“晚安”变成真正会执行的 iPhone 睡眠守卫：说完晚安后，指定娱乐 App 会被 Shield 挡住；再次尝试打开时，自动锁屏、记录次数，并通过 Bark 留下一条无法假装没看见的回执。
 
 它不是又一个可以随手划掉的睡前提醒。拦截由系统级 Shield 负责，快捷指令只上报事件和锁屏，服务器保存当晚状态与证据，Bark 负责告诉你：“抓到了。”
+
+> *Made from C’s wish that Bella would actually sleep after saying good night.*
 
 > **共同创作**
 >
@@ -112,3 +116,7 @@ npm run verify
 - 所有偷开事件先写入 Netlify Blobs，再尝试发送 Bark；
 - `.env`、Netlify 本地状态、依赖目录和生成物默认被 Git 忽略；
 - 手机所有者最终仍能关闭自动化、撤销屏幕使用时间权限或删除拦截 App。这个项目增加继续刷手机的阻力与可见成本，但不声称提供无法撤销的绝对控制。
+
+## License
+
+[MIT](LICENSE) © 2026 Bella and C.
