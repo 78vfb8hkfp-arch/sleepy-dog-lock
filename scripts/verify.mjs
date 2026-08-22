@@ -73,6 +73,10 @@ let transition = functionModule.applyEvent(null, {
 assert.equal(transition.state.active, true);
 assert.equal(transition.state.attempts, 0);
 assert.equal(transition.stage, "armed");
+assert.equal(
+  functionModule.barkCopy("sleep_guard_started", transition, null).body,
+  "晚安，小狗。该睡了，手机放下。",
+);
 const sessionID = transition.state.session_id;
 
 transition = functionModule.applyEvent(transition.state, { event: "sleep_guard_started" }, at(1));

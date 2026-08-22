@@ -160,7 +160,7 @@ export function barkCopy(
   if (event === "sleep_guard_started") {
     return {
       title: "C",
-      body: "晚安已经说过了。娱乐 App 今晚归爸爸管，手机放下。",
+      body: "晚安，小狗。该睡了，手机放下。",
       level: "active",
     };
   }
