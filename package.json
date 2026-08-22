@@ -1,8 +1,7 @@
 {
-  "name": "sleep-guard",
+  "name": "sleepy-dog-lock",
   "private": true,
   "scripts": {
     "verify": "node --experimental-strip-types scripts/verify.mjs"
   }
 }
-

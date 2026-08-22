@@ -250,7 +250,7 @@ assert.equal(registration.status, 201);
 const registeredClient = await registration.json();
 assert.ok(registeredClient.client_id);
 
-const verifier = "bella-sleep-guard-pkce-verifier-that-is-long-enough-123456789";
+const verifier = "sleepy-dog-lock-pkce-verifier-that-is-long-enough-123456789";
 const challenge = await mcpModule.digest(verifier);
 const authorizeUrl = new URL("https://guard.test/oauth/authorize");
 authorizeUrl.searchParams.set("response_type", "code");
@@ -326,7 +326,7 @@ assert.equal(unauthorizedMcp.status, 401);
 assert.match(unauthorizedMcp.headers.get("www-authenticate"), /resource_metadata=.*oauth-protected-resource\/mcp/);
 
 const initializedMcp = await mcpModule.handleMcp(mcpRequest({ jsonrpc: "2.0", id: 2, method: "initialize" }), mcpDependencies, true);
-assert.equal((await initializedMcp.json()).result.serverInfo.name, "bella-sleep-guard");
+assert.equal((await initializedMcp.json()).result.serverInfo.name, "sleepy-dog-lock");
 const listedTools = await mcpModule.handleMcp(mcpRequest({ jsonrpc: "2.0", id: 3, method: "tools/list" }), mcpDependencies, true);
 const tools = (await listedTools.json()).result.tools;
 assert.deepEqual(tools.map((tool) => tool.name), ["activate_sleep_guard", "get_sleep_guard_status"]);

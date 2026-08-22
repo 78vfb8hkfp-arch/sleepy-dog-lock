@@ -85,7 +85,7 @@ function normalizedEnd(value: unknown, now: Date): string {
     return candidate.toISOString();
   }
 
-  // Sleep Guard is Bella-specific: fall back to the next 11:00 in Shanghai,
+  // This deployment uses the next 11:00 in Shanghai as its fallback,
   // rather than a rolling duration that could keep the phone locked all afternoon.
   const shanghaiNow = new Date(now.getTime() + 8 * 60 * 60 * 1000);
   let end = new Date(Date.UTC(

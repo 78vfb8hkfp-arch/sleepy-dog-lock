@@ -6,7 +6,7 @@
 
 在 Netlify Site configuration → Environment variables 中设置：
 
-- `SLEEP_GUARD_SHORTCUT_TOKEN`：至少 32 个随机字符；只复制到 Bella 手机的快捷指令请求头。
+- `SLEEP_GUARD_SHORTCUT_TOKEN`：至少 32 个随机字符；只复制到使用者 iPhone 的快捷指令请求头。
 - `BARK_DEVICE_KEY`：Bark 测试 URL 中的设备 key；只保留在 Netlify。
 - `BARK_API_ORIGIN`：默认 `https://api.day.app`，只有自建 Bark server 时才修改。
 - `BARK_ICON_URL`：可选的公开 HTTPS 头像地址；未设置时使用站点内置的抽象头像。
@@ -72,9 +72,9 @@ https://<site>.netlify.app/mcp
 
 它提供两个工具：
 
-- `activate_sleep_guard`：Bella 在 ChatGPT 明确说晚安或准备睡觉时开启守卫。
+- `activate_sleep_guard`：使用者在 ChatGPT 明确说晚安或准备睡觉时开启守卫。
 - `get_sleep_guard_status`：只读查询当前状态和偷开次数。
 
-MCP 不接受快捷指令 Token。连接使用 OAuth 2.1 Authorization Code + PKCE：ChatGPT 发起连接后，服务会向 Bella 的 Bark 发送一次授权链接；只有从手机点按该链接，浏览器中的连接才会继续。授权码只能使用一次，访问令牌保存在独立的 `sleep-guard-mcp-auth` Blob store 中并在 90 天后失效。
+MCP 不接受快捷指令 Token。连接使用 OAuth 2.1 Authorization Code + PKCE：ChatGPT 发起连接后，服务会向使用者的 Bark 发送一次授权链接；只有从手机点按该链接，浏览器中的连接才会继续。授权码只能使用一次，访问令牌保存在独立的 `sleep-guard-mcp-auth` Blob store 中并在 90 天后失效。
 
 OAuth 元数据、动态客户端注册、授权与令牌端点均由同一个 Netlify Function 提供。任何未认证的 `/mcp` 请求都会返回带 `resource_metadata` 的 `WWW-Authenticate`，不会调用睡眠状态机。

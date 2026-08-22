@@ -296,9 +296,9 @@ export async function beginAuthorization(
   const requestIdJson = JSON.stringify(requestId);
   return html(200, `<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>C · Sleep Guard</title><style>
+<title>C · Sleepy Dog Lock</title><style>
 :root{color-scheme:dark}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#111016;color:#f7f4ff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif}.card{width:min(86vw,420px);padding:34px;border:1px solid #ffffff26;border-radius:30px;background:linear-gradient(145deg,#ffffff18,#ffffff08);box-shadow:0 30px 90px #0008;backdrop-filter:blur(22px);text-align:center}.mark{font-size:42px;margin-bottom:16px}.muted{color:#c7c0d4;line-height:1.55}.pulse{display:inline-block;width:9px;height:9px;border-radius:50%;background:#9d7cff;box-shadow:0 0 18px #9d7cff;margin-right:8px;animation:p 1.5s infinite}@keyframes p{50%{opacity:.35}}
-</style></head><body><main class="card"><div class="mark">C</div><h1>等 Bella 点一下允许</h1><p class="muted"><span class="pulse"></span>授权通知已经发到 Bark。确认是你刚刚连接的 ${safeClientName}，再点通知。</p><p id="status" class="muted">正在等待手机确认……</p></main><script>
+</style></head><body><main class="card"><div class="mark">C</div><h1>等你点一下允许</h1><p class="muted"><span class="pulse"></span>授权通知已经发到 Bark。确认是你刚刚连接的 ${safeClientName}，再点通知。</p><p id="status" class="muted">正在等待手机确认……</p></main><script>
 const id=${requestIdJson};let stopped=false;async function poll(){if(stopped)return;try{const r=await fetch('/oauth/pending?id='+encodeURIComponent(id),{cache:'no-store'});const d=await r.json();if(d.redirect){stopped=true;location.replace(d.redirect);return}if(d.error){stopped=true;document.getElementById('status').textContent='授权已失效，请返回重试。';return}}catch{}setTimeout(poll,1200)}poll();
 </script></body></html>`);
 }
@@ -423,8 +423,8 @@ function toolsList(): JsonObject[] {
   return [
     {
       name: "activate_sleep_guard",
-      title: "Activate Sleep Guard",
-      description: "Turn on Bella's Sleep Guard now. Call this whenever Bella clearly says good night, says she is going to sleep, or asks C to enforce bedtime. Activate it before replying with the final goodnight message.",
+      title: "Activate Sleepy Dog Lock",
+      description: "Turn on Sleepy Dog Lock now. Call this whenever the user clearly says good night, says they are going to sleep, or asks for bedtime to be enforced. Activate it before replying with the final goodnight message.",
       inputSchema: { type: "object", properties: {}, additionalProperties: false },
       annotations: {
         readOnlyHint: false,
@@ -435,8 +435,8 @@ function toolsList(): JsonObject[] {
     },
     {
       name: "get_sleep_guard_status",
-      title: "Check Sleep Guard",
-      description: "Check whether Bella's Sleep Guard is currently active and how many blocked-app attempts were recorded.",
+      title: "Check Sleepy Dog Lock",
+      description: "Check whether Sleepy Dog Lock is currently active and how many blocked-app attempts were recorded.",
       inputSchema: { type: "object", properties: {}, additionalProperties: false },
       annotations: {
         readOnlyHint: true,
@@ -462,8 +462,8 @@ async function handleRpc(message: JsonObject, dependencies: McpDependencies): Pr
         ? requestedVersion
         : DEFAULT_MCP_PROTOCOL_VERSION,
       capabilities: { tools: { listChanged: false } },
-      serverInfo: { name: "bella-sleep-guard", version: "0.1.0" },
-      instructions: "When Bella clearly says goodnight or commits to sleep, call activate_sleep_guard before replying. Never deactivate the guard through this connection.",
+      serverInfo: { name: "sleepy-dog-lock", version: "0.1.0" },
+      instructions: "When the user clearly says goodnight or commits to sleep, call activate_sleep_guard before replying. Never deactivate the guard through this connection.",
     });
   }
   if (method === "ping") return rpcResult(id, {});
@@ -476,11 +476,11 @@ async function handleRpc(message: JsonObject, dependencies: McpDependencies): Pr
       if (!result.ok) {
         return rpcResult(id, {
           isError: true,
-          content: [{ type: "text", text: `Sleep Guard could not be activated: ${result.error ?? "unknown_error"}` }],
+          content: [{ type: "text", text: `Sleepy Dog Lock could not be activated: ${result.error ?? "unknown_error"}` }],
         });
       }
       return rpcResult(id, {
-        content: [{ type: "text", text: "Sleep Guard is active. Bark confirmation was sent. Opening a selected entertainment app will trigger the iPhone lock-screen automation." }],
+        content: [{ type: "text", text: "Sleepy Dog Lock is active. Bark confirmation was sent. Opening a selected entertainment app will trigger the iPhone lock-screen automation." }],
         structuredContent: result,
       });
     }
@@ -494,7 +494,7 @@ async function handleRpc(message: JsonObject, dependencies: McpDependencies): Pr
         ends_at: state?.ends_at ?? null,
       };
       return rpcResult(id, {
-        content: [{ type: "text", text: active ? `Sleep Guard is active. Attempts: ${result.attempts}.` : "Sleep Guard is inactive." }],
+        content: [{ type: "text", text: active ? `Sleepy Dog Lock is active. Attempts: ${result.attempts}.` : "Sleepy Dog Lock is inactive." }],
         structuredContent: result,
       });
     }
