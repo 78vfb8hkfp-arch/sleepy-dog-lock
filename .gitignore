@@ -1,0 +1,11 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+.build/
+node_modules/
+netlify/.netlify/
+netlify/functions/

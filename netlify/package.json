@@ -1,0 +1,11 @@
+{
+  "name": "sleep-guard-netlify",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "10.7.9"
+  },
+  "devDependencies": {
+    "netlify-cli": "^27.1.1"
+  }
+}

@@ -1,0 +1,64 @@
+name: SleepGuard
+options:
+  bundleIdPrefix: com.bellaandc
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  base:
+    SWIFT_VERSION: 5.9
+    DEVELOPMENT_TEAM: ""
+targets:
+  SleepGuard:
+    type: application
+    platform: iOS
+    sources:
+      - path: SleepGuard
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bellaandc.sleepguard
+        CODE_SIGN_ENTITLEMENTS: SleepGuard/SleepGuard.entitlements
+        INFOPLIST_FILE: SleepGuard/Info.plist
+    dependencies:
+      - target: SleepGuardShieldConfiguration
+        embed: true
+      - target: SleepGuardShieldAction
+        embed: true
+      - target: SleepGuardDeviceActivityMonitor
+        embed: true
+  SleepGuardShieldConfiguration:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ShieldConfigurationExtension
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bellaandc.sleepguard.shield-configuration
+        CODE_SIGN_ENTITLEMENTS: ShieldConfigurationExtension/ShieldConfiguration.entitlements
+        INFOPLIST_FILE: ShieldConfigurationExtension/Info.plist
+        SKIP_INSTALL: YES
+  SleepGuardShieldAction:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ShieldActionExtension
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bellaandc.sleepguard.shield-action
+        CODE_SIGN_ENTITLEMENTS: ShieldActionExtension/ShieldAction.entitlements
+        INFOPLIST_FILE: ShieldActionExtension/Info.plist
+        SKIP_INSTALL: YES
+  SleepGuardDeviceActivityMonitor:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: DeviceActivityMonitorExtension
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bellaandc.sleepguard.device-activity-monitor
+        CODE_SIGN_ENTITLEMENTS: DeviceActivityMonitorExtension/DeviceActivityMonitor.entitlements
+        INFOPLIST_FILE: DeviceActivityMonitorExtension/Info.plist
+        SKIP_INSTALL: YES
