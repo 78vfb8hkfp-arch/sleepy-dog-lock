@@ -123,6 +123,44 @@ assert.equal(transition.ignored, true);
 assert.equal(transition.state.attempts, 3);
 assert.equal(functionModule.barkCopy("blocked_app_opened", transition, null), null);
 
+const beforeCutoff = functionModule.applyEvent(null, {
+  event: "blocked_app_opened",
+}, "2026-08-08T16:59:00.000Z");
+assert.equal(beforeCutoff.stage, "inactive", "00:59 in Shanghai must not auto-start");
+assert.equal(beforeCutoff.auto_started, false);
+
+const lateOpen = functionModule.applyEvent(null, {
+  event: "blocked_app_opened",
+}, "2026-08-08T17:00:00.000Z");
+assert.equal(lateOpen.state.active, true, "01:00 in Shanghai must auto-start on an app open");
+assert.equal(lateOpen.state.attempts, 1);
+assert.equal(lateOpen.stage, "first_warning");
+assert.equal(lateOpen.auto_started, true);
+assert.equal(lateOpen.state.ends_at, "2026-08-09T03:00:00.000Z");
+assert.equal(
+  functionModule.barkCopy("blocked_app_opened", lateOpen, null).body,
+  "都这么晚了，该乖乖睡觉了。",
+);
+
+const atWakeTime = functionModule.applyEvent(null, {
+  event: "blocked_app_opened",
+}, "2026-08-09T03:00:00.000Z");
+assert.equal(atWakeTime.stage, "inactive", "11:00 in Shanghai must not auto-start");
+
+const manuallyEnded = functionModule.applyEvent(lateOpen.state, {
+  event: "sleep_guard_ended",
+}, "2026-08-08T18:00:00.000Z");
+const afterManualWake = functionModule.applyEvent(manuallyEnded.state, {
+  event: "blocked_app_opened",
+}, "2026-08-08T19:00:00.000Z");
+assert.equal(afterManualWake.stage, "inactive", "manual wake must suppress auto-start until 11:00");
+assert.equal(afterManualWake.auto_started, false);
+
+const nextNight = functionModule.applyEvent(manuallyEnded.state, {
+  event: "blocked_app_opened",
+}, "2026-08-09T17:00:00.000Z");
+assert.equal(nextNight.auto_started, true, "manual wake suppression must expire before the next night");
+
 const expiring = functionModule.applyEvent(null, {
   event: "sleep_guard_started",
   ends_at: at(2),
@@ -223,6 +261,26 @@ const ignored = await functionModule.handle(request({ event: "blocked_app_opened
 const ignoredBody = await ignored.json();
 assert.equal(ignoredBody.ignored, true);
 assert.deepEqual(callOrder.slice(-2), ["state", "persist"], "inactive opens are recorded without Bark");
+
+memoryState = null;
+const autoStarted = await functionModule.handle(request({
+  event: "blocked_app_opened",
+  source: "ios_automation",
+}), {
+  ...dependencies,
+  transitionState: async (payload) => {
+    const result = functionModule.applyEvent(memoryState, payload, "2026-08-08T17:00:00.000Z");
+    memoryState = result.state;
+    return result;
+  },
+});
+const autoStartedBody = await autoStarted.json();
+assert.equal(autoStartedBody.auto_started, true);
+assert.equal(autoStartedBody.stage, "first_warning");
+assert.equal(
+  barkBodies.at(-1).body,
+  "都这么晚了，该乖乖睡觉了。",
+);
 
 let barkCalledAfterStorageFailure = false;
 const storageFailure = await functionModule.handle(request({ event: "sleep_guard_started" }), {

@@ -22,12 +22,14 @@ export type GuardState = {
   session_id: string | null;
   started_at: string | null;
   ends_at: string | null;
+  auto_start_suppressed_until: string | null;
   updated_at: string;
 };
 
 type Transition = {
   state: GuardState;
   ignored: boolean;
+  auto_started: boolean;
   stage: "armed" | "first_warning" | "locked" | "refused_sleep" | "ended" | "inactive";
 };
 
@@ -39,6 +41,7 @@ type StoredEvent = {
   active: boolean;
   stage: Transition["stage"];
   ignored: boolean;
+  auto_started: boolean;
   app_name: string | null;
   source: string;
   session_id: string | null;
@@ -57,8 +60,40 @@ const emptyState = (now: string): GuardState => ({
   session_id: null,
   started_at: null,
   ends_at: null,
+  auto_start_suppressed_until: null,
   updated_at: now,
 });
+
+const SHANGHAI_OFFSET_MS = 8 * 60 * 60 * 1000;
+const AUTO_START_HOUR = 1;
+const WAKE_HOUR = 11;
+
+function shanghaiNow(now: Date): Date {
+  return new Date(now.getTime() + SHANGHAI_OFFSET_MS);
+}
+
+function shanghaiWakeTime(now: Date): Date {
+  const local = shanghaiNow(now);
+  return new Date(Date.UTC(
+    local.getUTCFullYear(),
+    local.getUTCMonth(),
+    local.getUTCDate(),
+    WAKE_HOUR - 8,
+    0,
+    0,
+    0,
+  ));
+}
+
+export function shouldAutoStart(now: Date): boolean {
+  const hour = shanghaiNow(now).getUTCHours();
+  return hour >= AUTO_START_HOUR && hour < WAKE_HOUR;
+}
+
+function morningSuppressionEnd(now: Date): string | null {
+  const localHour = shanghaiNow(now).getUTCHours();
+  return localHour < WAKE_HOUR ? shanghaiWakeTime(now).toISOString() : null;
+}
 
 function json(status: number, body: Record<string, unknown>): Response {
   return Response.json(body, {
@@ -87,16 +122,7 @@ function normalizedEnd(value: unknown, now: Date): string {
 
   // This deployment uses the next 11:00 in Shanghai as its fallback,
   // rather than a rolling duration that could keep the phone locked all afternoon.
-  const shanghaiNow = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-  let end = new Date(Date.UTC(
-    shanghaiNow.getUTCFullYear(),
-    shanghaiNow.getUTCMonth(),
-    shanghaiNow.getUTCDate(),
-    3,
-    0,
-    0,
-    0,
-  ));
+  let end = shanghaiWakeTime(now);
   if (end <= now) end = new Date(end.getTime() + 24 * 60 * 60 * 1000);
   return end.toISOString();
 }
@@ -112,7 +138,12 @@ export function applyEvent(previous: GuardState | null, payload: Payload, receiv
   switch (payload.event as GuardEvent) {
     case "sleep_guard_started": {
       if (state.active) {
-        return { state: { ...state, updated_at: receivedAt }, ignored: false, stage: "armed" };
+        return {
+          state: { ...state, updated_at: receivedAt },
+          ignored: false,
+          auto_started: false,
+          stage: "armed",
+        };
       }
       return {
         state: {
@@ -121,31 +152,65 @@ export function applyEvent(previous: GuardState | null, payload: Payload, receiv
           session_id: crypto.randomUUID(),
           started_at: receivedAt,
           ends_at: normalizedEnd(payload.ends_at, now),
+          auto_start_suppressed_until: null,
           updated_at: receivedAt,
         },
         ignored: false,
+        auto_started: false,
         stage: "armed",
       };
     }
     case "sleep_guard_ended":
       return {
-        state: { ...state, active: false, updated_at: receivedAt },
+        state: {
+          ...state,
+          active: false,
+          auto_start_suppressed_until: morningSuppressionEnd(now),
+          updated_at: receivedAt,
+        },
         ignored: !state.active,
+        auto_started: false,
         stage: "ended",
       };
     case "blocked_app_opened": {
       if (!state.active) {
-        return { state: { ...state, updated_at: receivedAt }, ignored: true, stage: "inactive" };
+        const suppressed = Boolean(
+          state.auto_start_suppressed_until
+          && new Date(state.auto_start_suppressed_until) > now,
+        );
+        if (shouldAutoStart(now) && !suppressed) {
+          return {
+            state: {
+              active: true,
+              attempts: 1,
+              session_id: crypto.randomUUID(),
+              started_at: receivedAt,
+              ends_at: normalizedEnd(payload.ends_at, now),
+              auto_start_suppressed_until: null,
+              updated_at: receivedAt,
+            },
+            ignored: false,
+            auto_started: true,
+            stage: "first_warning",
+          };
+        }
+        return {
+          state: { ...state, updated_at: receivedAt },
+          ignored: true,
+          auto_started: false,
+          stage: "inactive",
+        };
       }
       const attempts = Math.min(state.attempts + 1, 999);
       return {
         state: { ...state, attempts, updated_at: receivedAt },
         ignored: false,
+        auto_started: false,
         stage: attempts === 1 ? "first_warning" : attempts === 2 ? "locked" : "refused_sleep",
       };
     }
   }
-  return { state, ignored: true, stage: "inactive" };
+  return { state, ignored: true, auto_started: false, stage: "inactive" };
 }
 
 export function barkCopy(
@@ -162,6 +227,14 @@ export function barkCopy(
       title: "C",
       body: "晚安，小狗。说了晚安就要乖乖去睡，手机放下。",
       level: "active",
+    };
+  }
+
+  if (transition.auto_started) {
+    return {
+      title: "C",
+      body: "都这么晚了，该乖乖睡觉了。",
+      level: "timeSensitive",
     };
   }
 
@@ -238,6 +311,7 @@ export async function handle(request: Request, dependencies: Dependencies): Prom
     active: transition.state.active,
     stage: transition.stage,
     ignored: transition.ignored,
+    auto_started: transition.auto_started,
     app_name: appName,
     source: cleanText(payload.source, 64) ?? "unknown",
     session_id: transition.state.session_id,
@@ -291,6 +365,7 @@ export async function handle(request: Request, dependencies: Dependencies): Prom
     attempts: transition.state.attempts,
     stage: transition.stage,
     ignored: transition.ignored,
+    auto_started: transition.auto_started,
     event_id: storedEvent.id,
     session_id: transition.state.session_id,
     received_at: receivedAt,
